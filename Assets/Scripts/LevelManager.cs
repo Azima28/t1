@@ -70,6 +70,20 @@ public class LevelManager : MonoBehaviour
     public int GetCurrentSeason() => PlayerPrefs.GetInt(SEASON_KEY, 1);
 
     /// <summary>
+    /// Check apakah level sudah terbuka.
+    /// Level 1 selalu terbuka, level lainnya terbuka jika <= savedLevel.
+    /// </summary>
+    public static bool IsLevelUnlocked(int level)
+    {
+        // Level 1 selalu terbuka
+        if (level <= 1) return true;
+        
+        // Cek level tersimpan
+        int savedLevel = PlayerPrefs.GetInt(LEVEL_KEY, 1);
+        return level <= savedLevel;
+    }
+
+    /// <summary>
     /// Dapatkan checkpoint untuk level tertentu
     /// </summary>
     public Transform GetCheckpoint(int level)

@@ -2,12 +2,27 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [Header("Movement")]
     public float speed = 5f;
     public float jumpForce = 10f;
+    
+    [Header("Ground Snapping (untuk slope)")]
+    [Tooltip("Aktifkan agar player menempel di slope")]
+    public bool enableGroundSnapping = true;
+    
+    [Tooltip("Jarak raycast ke bawah untuk deteksi ground")]
+    public float groundCheckDistance = 0.3f;
+    
+    [Tooltip("Kekuatan snap ke ground (makin besar makin kuat)")]
+    public float snapForce = 20f;
+    
+    [Tooltip("Layer untuk ground")]
+    public LayerMask groundLayer;
 
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
     private Animator animator;
+    private Collider2D playerCollider;
     private bool isGrounded = false;
     private float moveX;
 
@@ -16,33 +31,31 @@ public class PlayerMovement : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
+        playerCollider = GetComponent<Collider2D>();
         
-        // Cek apakah Rigidbody2D ada
         if (rb == null)
         {
-            Debug.LogError("PlayerMovement butuh Rigidbody2D! Tambahkan Rigidbody2D ke object ini.");
+            Debug.LogError("PlayerMovement butuh Rigidbody2D!");
             return;
         }
         
         rb.freezeRotation = true;
-        
-        // Memastikan deteksi tabrakan lebih akurat untuk objek yang bergerak cepat
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-        
-        // Menghaluskan pergerakan sprite
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
-        
-        // PENTING: Cegah Rigidbody "tidur" agar ground detection selalu aktif
         rb.sleepMode = RigidbodySleepMode2D.NeverSleep;
 
-        // Biar tidak nempel di tembok saat loncat (friction = 0)
-        Collider2D col = GetComponent<Collider2D>();
-        if (col != null)
+        // No friction - player licin
+        if (playerCollider != null)
         {
             PhysicsMaterial2D noFriction = new PhysicsMaterial2D("NoFriction");
             noFriction.friction = 0f;
             noFriction.bounciness = 0f;
-            col.sharedMaterial = noFriction;
+            playerCollider.sharedMaterial = noFriction;
+        }
+        
+        if (groundLayer == 0)
+        {
+            groundLayer = LayerMask.GetMask("Default", "Ground", "Slope");
         }
     }
 
@@ -50,11 +63,10 @@ public class PlayerMovement : MonoBehaviour
     {
         if (rb == null) return;
 
-        // Gabungkan input dari MoveButton (mobile) DAN keyboard
+        // Input handling
         float mobileInput = MoveButton.Input;
         float keyboardInput = Input.GetAxisRaw("Horizontal");
         
-        // Prioritas: mobile jika ada, kalau tidak pakai keyboard
         if (Mathf.Abs(mobileInput) > 0.1f)
         {
             moveX = mobileInput;
@@ -64,27 +76,26 @@ public class PlayerMovement : MonoBehaviour
             moveX = keyboardInput;
         }
 
-        // Berbalik arah sesuai gerakan (sprite default menghadap kiri)
+        // Flip sprite
         if (moveX > 0)
         {
-            spriteRenderer.flipX = true; // Menghadap kanan
+            spriteRenderer.flipX = true;
         }
         else if (moveX < 0)
         {
-            spriteRenderer.flipX = false; // Menghadap kiri
+            spriteRenderer.flipX = false;
         }
 
-        // Set animator parameters
+        // Animator
         if (animator != null)
         {
             bool isMoving = Mathf.Abs(moveX) > 0;
-            
             animator.SetBool("IsIdle", !isMoving && isGrounded);
             animator.SetBool("IsRunning", isMoving && isGrounded);
             animator.SetBool("IsJump", !isGrounded);
         }
 
-        // Loncat (Space keyboard ATAU JumpButton mobile)
+        // Jump
         bool jumpPressed = Input.GetKeyDown(KeyCode.Space) || JumpButton.IsPressed;
         if (jumpPressed && isGrounded)
         {
@@ -97,16 +108,45 @@ public class PlayerMovement : MonoBehaviour
     {
         if (rb == null) return;
 
-        // Terapkan pergerakan di FixedUpdate untuk kestabilan fisika
+        // Movement
         rb.velocity = new Vector2(moveX * speed, rb.velocity.y);
+        
+        // Ground Snapping
+        if (enableGroundSnapping && isGrounded && rb.velocity.y <= 0.1f)
+        {
+            ApplyGroundSnapping();
+        }
+    }
+
+    void ApplyGroundSnapping()
+    {
+        Vector2 rayStart = transform.position;
+        float rayDistance = groundCheckDistance;
+        
+        if (playerCollider != null)
+        {
+            rayStart = (Vector2)transform.position + Vector2.down * (playerCollider.bounds.extents.y * 0.5f);
+            rayDistance = playerCollider.bounds.extents.y + groundCheckDistance;
+        }
+        
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, rayDistance, groundLayer);
+        
+        if (hit.collider != null)
+        {
+            float distanceToGround = hit.distance - (playerCollider != null ? playerCollider.bounds.extents.y : 0.5f);
+            
+            if (distanceToGround > 0.01f && distanceToGround < groundCheckDistance)
+            {
+                rb.velocity = new Vector2(rb.velocity.x, -snapForce * Time.fixedDeltaTime);
+            }
+        }
     }
 
     void OnCollisionStay2D(Collision2D collision)
     {
-        // Mengecek apakah tabrakan terjadi dari bawah (tanah)
         foreach (ContactPoint2D contact in collision.contacts)
         {
-            if (contact.normal.y > 0.5f) // Normal ke atas berarti kita di atas sesuatu
+            if (contact.normal.y > 0.5f)
             {
                 isGrounded = true;
                 break;
@@ -116,7 +156,6 @@ public class PlayerMovement : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        // Deteksi langsung saat mendarat
         foreach (ContactPoint2D contact in collision.contacts)
         {
             if (contact.normal.y > 0.5f)

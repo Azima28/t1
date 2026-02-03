@@ -16,6 +16,9 @@ public class TrapTrigger : MonoBehaviour
     [Tooltip("Obstacle yang bergerak horizontal")]
     public MovingObstacle[] movingObstacles;
     
+    [Tooltip("Bola yang menggelinding")]
+    public RollingBall[] rollingBalls;
+    
     private bool hasTriggered = false;
 
     void Start()
@@ -55,6 +58,15 @@ public class TrapTrigger : MonoBehaviour
             foreach (MovingObstacle obstacle in movingObstacles)
             {
                 if (obstacle != null) obstacle.StartMoving();
+            }
+        }
+        
+        // Aktifkan bola menggelinding
+        if (rollingBalls != null)
+        {
+            foreach (RollingBall ball in rollingBalls)
+            {
+                if (ball != null) ball.StartRolling();
             }
         }
     }

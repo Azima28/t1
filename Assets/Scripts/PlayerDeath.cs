@@ -152,6 +152,12 @@ public class PlayerDeath : MonoBehaviour
             obstacle.ResetObstacle();
         }
         
+        RollingBall[] balls = FindObjectsOfType<RollingBall>();
+        foreach (RollingBall ball in balls)
+        {
+            ball.ResetBall();
+        }
+        
         TrapTrigger[] triggers = FindObjectsOfType<TrapTrigger>();
         foreach (TrapTrigger trigger in triggers)
         {
