@@ -18,6 +18,13 @@ public class LevelButton : MonoBehaviour
     [SerializeField] private GameObject lockIcon;
     [SerializeField] private TextMeshProUGUI levelText;
 
+    [Header("Star Display")]
+    [Tooltip("3 Image untuk bintang penuh di level button")]
+    [SerializeField] private Image[] starFullImages;
+    
+    [Tooltip("3 Image untuk bintang setengah (posisi sama dengan bintang penuh)")]
+    [SerializeField] private Image[] starHalfImages;
+
     [Header("Visual Settings")]
     [SerializeField] private Color unlockedColor = Color.white;
     [SerializeField] private Color lockedColor = new Color(0.5f, 0.5f, 0.5f, 1f);
@@ -67,6 +74,57 @@ public class LevelButton : MonoBehaviour
         // Update level text (optional)
         if (levelText != null)
             levelText.text = levelNumber.ToString();
+        
+        // Update star display
+        UpdateStarDisplay(isUnlocked);
+    }
+
+    /// <summary>
+    /// Update tampilan bintang berdasarkan skor tersimpan.
+    /// Mendukung half-star display (0.5, 1, 1.5, 2, 2.5, 3).
+    /// </summary>
+    private void UpdateStarDisplay(bool isUnlocked)
+    {
+        // Dapatkan jumlah bintang yang tersimpan untuk level ini
+        float stars = isUnlocked ? LevelCompletePanel.GetStars(levelNumber) : 0f;
+        
+        // Hitung berapa bintang penuh dan apakah ada setengah
+        int fullStars = Mathf.FloorToInt(stars);
+        bool hasHalfStar = (stars - fullStars) >= 0.5f;
+        
+        Debug.Log($"[LevelButton] Level {levelNumber}: isUnlocked={isUnlocked}, stars={stars}, fullStars={fullStars}, hasHalf={hasHalfStar}");
+        
+        // Update bintang penuh
+        if (starFullImages != null)
+        {
+            Debug.Log($"[LevelButton] Level {levelNumber}: starFullImages.Length={starFullImages.Length}");
+            for (int i = 0; i < starFullImages.Length; i++)
+            {
+                if (starFullImages[i] == null)
+                {
+                    Debug.LogWarning($"[LevelButton] Level {levelNumber}: starFullImages[{i}] is NULL!");
+                    continue;
+                }
+                bool shouldShow = i < fullStars;
+                starFullImages[i].gameObject.SetActive(shouldShow);
+                Debug.Log($"[LevelButton] Level {levelNumber}: Star {i} SetActive({shouldShow}) - actual active={starFullImages[i].gameObject.activeSelf}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[LevelButton] Level {levelNumber}: starFullImages array is NULL!");
+        }
+        
+        // Update bintang setengah
+        if (starHalfImages != null)
+        {
+            for (int i = 0; i < starHalfImages.Length; i++)
+            {
+                if (starHalfImages[i] == null) continue;
+                // Tampilkan half star hanya di posisi setelah full stars
+                starHalfImages[i].gameObject.SetActive(hasHalfStar && i == fullStars);
+            }
+        }
     }
 
     /// <summary>
@@ -81,8 +139,9 @@ public class LevelButton : MonoBehaviour
             return;
         }
 
-        // Simpan level yang sedang dimainkan (opsional, untuk track progress)
-        PlayerPrefs.SetInt("CurrentLevel", levelNumber);
+        // Simpan level yang dipilih untuk spawn point di SampleScene
+        // LevelManager akan membaca ini dan teleport player ke checkpoint yang sesuai
+        PlayerPrefs.SetInt("SelectedLevel", levelNumber);
         PlayerPrefs.Save();
 
         Debug.Log($"Loading level {levelNumber}: {sceneToLoad}");

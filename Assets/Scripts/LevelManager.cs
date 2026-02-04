@@ -59,6 +59,23 @@ public class LevelManager : MonoBehaviour
             Debug.Log($"[TEST MODE] Override ke Level {testLevel}");
         }
         
+        // Debug: tampilkan info checkpoint
+        Debug.Log($"=== LEVEL MANAGER DEBUG ===");
+        Debug.Log($"Current Level: {currentLevel}");
+        Debug.Log($"Checkpoint Index: {currentLevel - 1}");
+        Debug.Log($"Total Checkpoints: {levelCheckpoints.Length}");
+        
+        if (currentLevel - 1 >= 0 && currentLevel - 1 < levelCheckpoints.Length)
+        {
+            Transform cp = levelCheckpoints[currentLevel - 1];
+            Debug.Log($"Checkpoint Object: {(cp != null ? cp.name : "NULL")}");
+            Debug.Log($"Checkpoint Position: {(cp != null ? cp.position.ToString() : "N/A")}");
+        }
+        else
+        {
+            Debug.LogError($"Checkpoint index {currentLevel - 1} out of range!");
+        }
+        
         // Pindahkan player ke checkpoint level saat ini
         MovePlayerToCurrentCheckpoint();
         
@@ -151,15 +168,30 @@ public class LevelManager : MonoBehaviour
     public void LoadProgress()
     {
         int savedSeason = PlayerPrefs.GetInt(SEASON_KEY, 1);
-        int savedLevel = PlayerPrefs.GetInt(LEVEL_KEY, 1);
         
-        if (savedSeason != currentSeason)
+        // Cek apakah ada SelectedLevel dari menu level selection
+        // SelectedLevel = level yang dipilih player dari tombol
+        // CurrentLevel = progress unlock tertinggi
+        int selectedLevel = PlayerPrefs.GetInt("SelectedLevel", 0);
+        
+        if (selectedLevel > 0)
+        {
+            // Player memilih level dari menu, spawn di level tersebut
+            currentLevel = selectedLevel;
+            Debug.Log($"Player selected Level {selectedLevel} from menu");
+            
+            // Hapus SelectedLevel agar tidak mempengaruhi session berikutnya
+            PlayerPrefs.DeleteKey("SelectedLevel");
+            PlayerPrefs.Save();
+        }
+        else if (savedSeason != currentSeason)
         {
             currentLevel = 1;
         }
         else
         {
-            currentLevel = savedLevel;
+            // Tidak ada level yang dipilih, mulai dari level 1
+            currentLevel = 1;
         }
         
         Debug.Log($"Loaded: Season {currentSeason}, Level {currentLevel}");
@@ -207,12 +239,42 @@ public class LevelManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Reset semua progress. Hanya Level 1 yang terbuka.
+    /// </summary>
+    [ContextMenu("Reset All Progress")]
     public void ResetAllProgress()
     {
         PlayerPrefs.SetInt(SEASON_KEY, 1);
         PlayerPrefs.SetInt(LEVEL_KEY, 1);
         PlayerPrefs.Save();
         currentLevel = 1;
-        Debug.Log("All progress reset!");
+        Debug.Log("All progress reset! Only Level 1 is unlocked.");
+    }
+
+    /// <summary>
+    /// Unlock semua level (untuk testing).
+    /// Panggil dari Console atau buat button untuk ini.
+    /// </summary>
+    [ContextMenu("Unlock All Levels")]
+    public void UnlockAllLevels()
+    {
+        PlayerPrefs.SetInt(LEVEL_KEY, levelsPerSeason);
+        PlayerPrefs.Save();
+        Debug.Log($"All {levelsPerSeason} levels unlocked!");
+    }
+
+    /// <summary>
+    /// Unlock level tertentu.
+    /// </summary>
+    public void UnlockLevel(int level)
+    {
+        int currentUnlocked = PlayerPrefs.GetInt(LEVEL_KEY, 1);
+        if (level > currentUnlocked)
+        {
+            PlayerPrefs.SetInt(LEVEL_KEY, level);
+            PlayerPrefs.Save();
+            Debug.Log($"Level {level} unlocked!");
+        }
     }
 }

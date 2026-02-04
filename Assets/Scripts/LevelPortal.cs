@@ -91,8 +91,25 @@ public class LevelPortal : MonoBehaviour
             // Hanya naik level jika player di level yang sesuai dengan portal ini
             if (currentLevel == forLevel)
             {
-                LevelManager.Instance.CompleteLevel();
-                Debug.Log($"Level {forLevel} Complete! Now at Level {LevelManager.Instance.GetCurrentLevel()}");
+                // Tampilkan panel level complete dengan bintang
+                if (LevelCompletePanel.Instance != null)
+                {
+                    LevelCompletePanel.Instance.ShowLevelComplete(forLevel);
+                    isTeleporting = false;
+                    
+                    // Fade kembali ke terang
+                    if (fadePanel != null)
+                    {
+                        yield return StartCoroutine(Fade(1, 0));
+                    }
+                    yield break; // Stop disini, panel yang handle selanjutnya
+                }
+                else
+                {
+                    // Fallback jika tidak ada panel
+                    LevelManager.Instance.CompleteLevel();
+                    Debug.Log($"Level {forLevel} Complete! Now at Level {LevelManager.Instance.GetCurrentLevel()}");
+                }
             }
             else
             {

@@ -108,4 +108,53 @@ public class AudioSettingsManager : MonoBehaviour
         if (sfxIcon != null)
             sfxIcon.sprite = sfxOn ? audioOnSprite : audioOffSprite;
     }
+
+    // ================= DEBUG/RESET =================
+    /// <summary>
+    /// Reset semua audio settings ke default (musik ON, volume 100%).
+    /// </summary>
+    [ContextMenu("Reset Audio Settings")]
+    public void ResetAudioSettings()
+    {
+        PlayerPrefs.SetInt("MusicOn", 1);
+        PlayerPrefs.SetInt("SfxOn", 1);
+        PlayerPrefs.SetFloat("MusicVolume", 1f);
+        PlayerPrefs.SetFloat("SfxVolume", 1f);
+        PlayerPrefs.Save();
+
+        musicOn = true;
+        sfxOn = true;
+
+        if (musicSlider != null) musicSlider.value = 1f;
+        if (sfxSlider != null) sfxSlider.value = 1f;
+
+        ApplyMusic(1f);
+        ApplySFX(1f);
+        UpdateIcons();
+
+        Debug.Log("Audio settings reset! Music ON, Volume 100%");
+    }
+
+    /// <summary>
+    /// Force play musik sekarang.
+    /// </summary>
+    [ContextMenu("Force Play Music")]
+    public void ForcePlayMusic()
+    {
+        if (musicSource != null)
+        {
+            musicSource.mute = false;
+            musicSource.volume = 1f;
+            if (!musicSource.isPlaying)
+            {
+                musicSource.Play();
+            }
+            Debug.Log("Music forced to play!");
+        }
+        else
+        {
+            Debug.LogError("Music Source belum di-assign!");
+        }
+    }
 }
+
