@@ -16,23 +16,23 @@ public class LevelTimer : MonoBehaviour
     [SerializeField] private TextMeshProUGUI timerText;
     
     [Header("Time Thresholds (seconds)")]
-    [Tooltip("Waktu untuk dapat 3 bintang (tercepat)")]
-    [SerializeField] private float time3Stars = 30f;
+    [Tooltip("Waktu untuk dapat 3 bintang (tercepat) - 5 detik atau kurang")]
+    [SerializeField] private float time3Stars = 5f;
     
-    [Tooltip("Waktu untuk dapat 2.5 bintang")]
-    [SerializeField] private float time2_5Stars = 45f;
+    [Tooltip("Waktu untuk dapat 2.5 bintang - 8 detik atau kurang")]
+    [SerializeField] private float time2_5Stars = 8f;
     
-    [Tooltip("Waktu untuk dapat 2 bintang")]
-    [SerializeField] private float time2Stars = 60f;
+    [Tooltip("Waktu untuk dapat 2 bintang - 12 detik atau kurang")]
+    [SerializeField] private float time2Stars = 12f;
     
-    [Tooltip("Waktu untuk dapat 1.5 bintang")]
-    [SerializeField] private float time1_5Stars = 90f;
+    [Tooltip("Waktu untuk dapat 1.5 bintang - 18 detik atau kurang")]
+    [SerializeField] private float time1_5Stars = 18f;
     
-    [Tooltip("Waktu untuk dapat 1 bintang")]
-    [SerializeField] private float time1Stars = 120f;
+    [Tooltip("Waktu untuk dapat 1 bintang - 25 detik atau kurang")]
+    [SerializeField] private float time1Stars = 25f;
     
-    [Tooltip("Waktu untuk dapat 0.5 bintang (paling lambat, lebih dari ini = 0)")]
-    [SerializeField] private float time0_5Stars = 180f;
+    [Tooltip("Waktu untuk dapat 0.5 bintang (paling lambat, lebih dari ini = 0) - 35 detik atau kurang")]
+    [SerializeField] private float time0_5Stars = 35f;
 
     [Header("Settings")]
     [SerializeField] private bool showMilliseconds = false;

@@ -270,6 +270,32 @@ public class LevelCompletePanel : MonoBehaviour
         return total;
     }
 
+    /// <summary>
+    /// Reset bintang untuk level tertentu.
+    /// </summary>
+    public static void ResetStars(int level)
+    {
+        string key = $"Level_{level}_Stars";
+        PlayerPrefs.DeleteKey(key);
+        PlayerPrefs.Save();
+        Debug.Log($"[ResetStars] Reset stars for Level {level}");
+    }
+
+    /// <summary>
+    /// Reset semua bintang (untuk testing/debugging).
+    /// Panggil dari Console atau buat tombol reset.
+    /// </summary>
+    public static void ResetAllStars(int maxLevel = 30)
+    {
+        for (int i = 1; i <= maxLevel; i++)
+        {
+            string key = $"Level_{i}_Stars";
+            PlayerPrefs.DeleteKey(key);
+        }
+        PlayerPrefs.Save();
+        Debug.Log($"[ResetAllStars] All stars have been reset!");
+    }
+
     // === BUTTON CALLBACKS ===
     
     private void OnNextLevelClicked()
