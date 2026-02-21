@@ -134,34 +134,40 @@ public class PlayerDeath : MonoBehaviour
 
     void ResetAllTraps()
     {
-        FallingRock[] rocks = FindObjectsOfType<FallingRock>();
+        FallingRock[] rocks = FindObjectsOfType<FallingRock>(true);
         foreach (FallingRock rock in rocks)
         {
             rock.ResetRock();
         }
         
-        RisingObstacle[] risingObstacles = FindObjectsOfType<RisingObstacle>();
+        RisingObstacle[] risingObstacles = FindObjectsOfType<RisingObstacle>(true);
         foreach (RisingObstacle obstacle in risingObstacles)
         {
             obstacle.ResetObstacle();
         }
         
-        MovingObstacle[] movingObstacles = FindObjectsOfType<MovingObstacle>();
+        MovingObstacle[] movingObstacles = FindObjectsOfType<MovingObstacle>(true);
         foreach (MovingObstacle obstacle in movingObstacles)
         {
             obstacle.ResetObstacle();
         }
         
-        RollingBall[] balls = FindObjectsOfType<RollingBall>();
+        RollingBall[] balls = FindObjectsOfType<RollingBall>(true);
         foreach (RollingBall ball in balls)
         {
             ball.ResetBall();
         }
         
-        TrapTrigger[] triggers = FindObjectsOfType<TrapTrigger>();
+        TrapTrigger[] triggers = FindObjectsOfType<TrapTrigger>(true);
         foreach (TrapTrigger trigger in triggers)
         {
             trigger.ResetTrigger();
+        }
+        
+        MathCoin[] mathCoins = FindObjectsOfType<MathCoin>(true);
+        foreach (MathCoin coin in mathCoins)
+        {
+            coin.ResetCoin();
         }
     }
 }

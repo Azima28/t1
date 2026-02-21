@@ -190,8 +190,8 @@ public class LevelManager : MonoBehaviour
         }
         else
         {
-            // Tidak ada level yang dipilih, mulai dari level 1
-            currentLevel = 1;
+            // Muat level terakhir yang tersimpan (misal saat Retry)
+            currentLevel = PlayerPrefs.GetInt(LEVEL_KEY, 1);
         }
         
         Debug.Log($"Loaded: Season {currentSeason}, Level {currentLevel}");

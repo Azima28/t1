@@ -77,13 +77,7 @@ public class LevelPortal : MonoBehaviour
 
     IEnumerator TeleportWithFade(Transform player)
     {
-        // Fade ke hitam
-        if (fadePanel != null)
-        {
-            yield return StartCoroutine(Fade(0, 1));
-        }
-
-        // Cek apakah perlu naik level
+        // Cek apakah perlu naik level DULU, sebelum fade
         if (LevelManager.Instance != null)
         {
             int currentLevel = LevelManager.Instance.GetCurrentLevel();
@@ -91,18 +85,12 @@ public class LevelPortal : MonoBehaviour
             // Hanya naik level jika player di level yang sesuai dengan portal ini
             if (currentLevel == forLevel)
             {
-                // Tampilkan panel level complete dengan bintang
+                // Tampilkan panel level complete dengan bintang TANPA FADE
                 if (LevelCompletePanel.Instance != null)
                 {
                     LevelCompletePanel.Instance.ShowLevelComplete(forLevel);
                     isTeleporting = false;
-                    
-                    // Fade kembali ke terang
-                    if (fadePanel != null)
-                    {
-                        yield return StartCoroutine(Fade(1, 0));
-                    }
-                    yield break; // Stop disini, panel yang handle selanjutnya
+                    yield break; // Berhenti di sini, biarkan tombol di panel yang mengurus fade selanjutnya
                 }
                 else
                 {
@@ -115,6 +103,14 @@ public class LevelPortal : MonoBehaviour
             {
                 Debug.Log($"Portal untuk Level {forLevel}, tapi player sudah di Level {currentLevel}. Teleport saja tanpa naik level.");
             }
+        }
+
+        // --- Di bawah ini adalah logika untuk TELEPORT BIASA (bukan tamat level) ---
+
+        // Fade ke hitam
+        if (fadePanel != null)
+        {
+            yield return StartCoroutine(Fade(0, 1));
         }
 
         // Pindahkan player (selalu teleport)
@@ -145,7 +141,8 @@ public class LevelPortal : MonoBehaviour
 
         while (elapsed < fadeDuration)
         {
-            elapsed += Time.deltaTime;
+            // Gunakan unscaledDeltaTime agar works saat timeScale = 0
+            elapsed += Time.unscaledDeltaTime;
             color.a = Mathf.Lerp(startAlpha, endAlpha, elapsed / fadeDuration);
             fadePanel.color = color;
             yield return null;

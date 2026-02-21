@@ -58,6 +58,32 @@ public class LevelCompletePanel : MonoBehaviour
     private void Start()
     {
         SetupButtons();
+        // Pastikan layar kembali terang saat scene dimuat ulang
+        StartCoroutine(FadeFromBlack());
+    }
+
+    private IEnumerator FadeFromBlack()
+    {
+        Image panel = FindFadePanel();
+        if (panel == null) yield break;
+        
+        // Cek apakah layarnya sedang hitam (dari transisi sebelumnya)
+        if (panel.color.a > 0.1f)
+        {
+            float elapsed = 0f;
+            Color color = panel.color;
+            
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                color.a = Mathf.Lerp(1, 0, elapsed / fadeDuration);
+                panel.color = color;
+                yield return null;
+            }
+            
+            color.a = 0f;
+            panel.color = color;
+        }
     }
 
     private void SetupButtons()
@@ -298,8 +324,54 @@ public class LevelCompletePanel : MonoBehaviour
 
     // === BUTTON CALLBACKS ===
     
+    private Image fadePanel;
+    private float fadeDuration = 0.5f;
+    
+    /// <summary>
+    /// Cari FadePanel yang sudah dibuat oleh PlayerDeath atau LevelPortal
+    /// </summary>
+    private Image FindFadePanel()
+    {
+        if (fadePanel != null) return fadePanel;
+        
+        GameObject panelObj = GameObject.Find("FadePanel");
+        if (panelObj != null)
+        {
+            fadePanel = panelObj.GetComponent<Image>();
+        }
+        return fadePanel;
+    }
+    
+    private IEnumerator FadeToBlack()
+    {
+        Image panel = FindFadePanel();
+        if (panel == null) yield break;
+        
+        float elapsed = 0f;
+        Color color = panel.color;
+        
+        while (elapsed < fadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            color.a = Mathf.Lerp(0, 1, elapsed / fadeDuration);
+            panel.color = color;
+            yield return null;
+        }
+        
+        color.a = 1f;
+        panel.color = color;
+    }
+    
     private void OnNextLevelClicked()
     {
+        StartCoroutine(NextLevelWithFade());
+    }
+    
+    private IEnumerator NextLevelWithFade()
+    {
+        // Fade ke hitam
+        yield return StartCoroutine(FadeToBlack());
+        
         Time.timeScale = 1f;
         
         if (LevelManager.Instance != null)
@@ -323,19 +395,58 @@ public class LevelCompletePanel : MonoBehaviour
                 if (LevelTimer.Instance != null)
                     LevelTimer.Instance.StartTimer();
                 
+                // Sembunyikan UI dengan scale 0 agar coroutine tidak mati jika panelContainer = gameObject
+                panelContainer.transform.localScale = Vector3.zero;
+                
+                // Fade kembali terang
+                Image panel = FindFadePanel();
+                if (panel != null)
+                {
+                    float elapsed = 0f;
+                    Color color = panel.color;
+                    while (elapsed < fadeDuration)
+                    {
+                        elapsed += Time.unscaledDeltaTime;
+                        color.a = Mathf.Lerp(1, 0, elapsed / fadeDuration);
+                        panel.color = color;
+                        yield return null;
+                    }
+                    color.a = 0f;
+                    panel.color = color;
+                }
+                
+                // Setelah fade selesai, baru matikan panel dan kembalikan scale-nya
                 panelContainer.SetActive(false);
+                panelContainer.transform.localScale = Vector3.one;
             }
         }
     }
 
     private void OnRetryClicked()
     {
+        StartCoroutine(RetryWithFade());
+    }
+    
+    private IEnumerator RetryWithFade()
+    {
+        yield return StartCoroutine(FadeToBlack());
         Time.timeScale = 1f;
+        
+        // Simpan level saat ini sebelum reload agar LevelManager bisa muat level yang benar
+        if (LevelManager.Instance != null)
+            LevelManager.Instance.SaveProgress();
+        
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     private void OnMenuClicked()
     {
+        StartCoroutine(MenuWithFade());
+    }
+    
+    private IEnumerator MenuWithFade()
+    {
+        yield return StartCoroutine(FadeToBlack());
         Time.timeScale = 1f;
         SceneManager.LoadScene(menuSceneName);
     }
