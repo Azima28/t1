@@ -60,6 +60,11 @@ public class Pause : MonoBehaviour
     {
         Time.timeScale = 1f;
         IsPaused = false;
+        
+        // Simpan level saat ini agar LevelManager bisa muat level yang benar setelah reload
+        if (LevelManager.Instance != null)
+            LevelManager.Instance.SaveProgress();
+        
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
