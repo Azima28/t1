@@ -52,12 +52,12 @@ public class LevelManager : MonoBehaviour
     {
         LoadProgress();
         
-        // Jika testLevel diset, override ke level tersebut
-        if (testLevel > 0 && testLevel <= levelsPerSeason)
-        {
-            currentLevel = testLevel;
-            Debug.Log($"[TEST MODE] Override ke Level {testLevel}");
-        }
+        // Fitur testLevel dimatikan agar tidak menimpa save data saat Replay
+        // if (testLevel > 0 && testLevel <= levelsPerSeason)
+        // {
+        //     currentLevel = testLevel;
+        //     Debug.Log($"[TEST MODE] Override ke Level {testLevel}");
+        // }
         
         // Debug: tampilkan info checkpoint
         Debug.Log($"=== LEVEL MANAGER DEBUG ===");
@@ -168,30 +168,32 @@ public class LevelManager : MonoBehaviour
     public void LoadProgress()
     {
         int savedSeason = PlayerPrefs.GetInt(SEASON_KEY, 1);
-        
-        // Cek apakah ada SelectedLevel dari menu level selection
-        // SelectedLevel = level yang dipilih player dari tombol
-        // CurrentLevel = progress unlock tertinggi
         int selectedLevel = PlayerPrefs.GetInt("SelectedLevel", 0);
         
         if (selectedLevel > 0)
         {
-            // Player memilih level dari menu, spawn di level tersebut
+            // Player memilih level dari menu
             currentLevel = selectedLevel;
             Debug.Log($"Player selected Level {selectedLevel} from menu");
             
-            // Hapus SelectedLevel agar tidak mempengaruhi session berikutnya
+            // Simpan level yang aktif sekarang agar retry tidak lupa
+            PlayerPrefs.SetInt("ActiveLevel", currentLevel);
+            
+            // Hapus SelectedLevel agar tidak nyangkut jika nanti ke main menu
             PlayerPrefs.DeleteKey("SelectedLevel");
             PlayerPrefs.Save();
         }
         else if (savedSeason != currentSeason)
         {
             currentLevel = 1;
+            PlayerPrefs.SetInt("ActiveLevel", currentLevel);
+            PlayerPrefs.Save();
         }
         else
         {
-            // Muat level terakhir yang tersimpan (misal saat Retry)
-            currentLevel = PlayerPrefs.GetInt(LEVEL_KEY, 1);
+            // Jika tidak ada SelectedLevel (misal saat Replay/Retry)
+            // Baca level yang terakhir aktif dimainkan
+            currentLevel = PlayerPrefs.GetInt("ActiveLevel", PlayerPrefs.GetInt(LEVEL_KEY, 1));
         }
         
         Debug.Log($"Loaded: Season {currentSeason}, Level {currentLevel}");
@@ -200,9 +202,19 @@ public class LevelManager : MonoBehaviour
     public void SaveProgress()
     {
         PlayerPrefs.SetInt(SEASON_KEY, currentSeason);
-        PlayerPrefs.SetInt(LEVEL_KEY, currentLevel);
+        
+        // Simpan ActiveLevel saat ini
+        PlayerPrefs.SetInt("ActiveLevel", currentLevel);
+        
+        // Update LEVEL_KEY (Highest Unlocked) HANYA jika lebih besar
+        int highestUnlocked = PlayerPrefs.GetInt(LEVEL_KEY, 1);
+        if (currentLevel > highestUnlocked)
+        {
+            PlayerPrefs.SetInt(LEVEL_KEY, currentLevel);
+        }
+        
         PlayerPrefs.Save();
-        Debug.Log($"Saved: Season {currentSeason}, Level {currentLevel}");
+        Debug.Log($"Saved Progress! Max Unlocked: {PlayerPrefs.GetInt(LEVEL_KEY, 1)}, Currently Playing: {currentLevel}");
     }
 
     public void CompleteLevel()
