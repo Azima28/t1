@@ -28,7 +28,10 @@ public class RisingObstacle : MonoBehaviour
     public float delayAtBottom = 0.5f;
     
     [Header("Triggered Mode (Non-Loop)")]
-    [Tooltip("Delay sebelum turun (0 = tidak turun)")]
+    [Tooltip("Centang agar obstacle DIAM SELAMANYA di tujuan (tidak pernah kembali)")]
+    public bool stayForever = false;
+    
+    [Tooltip("Delay sebelum turun (hanya berlaku jika stayForever = false)")]
     public float stayDuration = 0f;
     
     [Header("Physics")]
@@ -151,7 +154,8 @@ public class RisingObstacle : MonoBehaviour
                 rb.velocity = Vector2.zero;
             }
             
-            if (stayDuration > 0)
+            // Jika tidak disuruh diam selamanya, baru mulai turun
+            if (!stayForever && stayDuration >= 0)
             {
                 Invoke(nameof(StartLowering), stayDuration);
             }

@@ -27,6 +27,9 @@ public class MovingObstacle : MonoBehaviour
     public float speed = 4f;
     
     [Header("Behavior")]
+    [Tooltip("Centang agar obstacle DIAM SELAMANYA di ujung (tidak pernah kembali)")]
+    public bool stayForever = false;
+    
     [Tooltip("Loop terus menerus")]
     public bool loopMode = true;
     
@@ -160,8 +163,17 @@ public class MovingObstacle : MonoBehaviour
     {
         if (!hasReachedEnd)
         {
-            // Sudah sampai ujung, balik ke start
+            // Sudah sampai ujung
             hasReachedEnd = true;
+            
+            // Diam selamanya di tujuan jika dicentang
+            if (stayForever)
+            {
+                isActive = false;
+                return;
+            }
+            
+            // Balik ke start
             targetPosition = returnPos;
             
             if (delayAtEdge > 0)
