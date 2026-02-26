@@ -115,7 +115,7 @@ public class MovingObstacle : MonoBehaviour
     }
 
     /// <summary>
-    /// Mulai bergerak (dipanggil oleh TrapTrigger)
+    /// Mulai bergerak (dipanggil oleh TrapTrigger standar)
     /// </summary>
     public void StartMoving()
     {
@@ -123,6 +123,25 @@ public class MovingObstacle : MonoBehaviour
         
         isActive = true;
         hasReachedEnd = false;
+        
+        if (sprite != null) sprite.enabled = true;
+    }
+
+    /// <summary>
+    /// Menggerakkan obstacle sejauh value "offset" dari posisinya saat ini.
+    /// Bergerak lurus ke titik target tersebut lalu diam di sana.
+    /// </summary>
+    public void MoveFurther(Vector2 offset)
+    {
+        // Set target baru sebesar offset dari posisi SAAT INI
+        targetPosition = transform.position + (Vector3)offset;
+        
+        // Paksa obstacle untuk bergerak sekali jalan dan diam di sana
+        isActive = true;
+        isWaiting = false;
+        hasReachedEnd = false;
+        loopMode = false;
+        stayForever = true;
         
         if (sprite != null) sprite.enabled = true;
     }

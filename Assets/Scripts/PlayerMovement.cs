@@ -6,6 +6,10 @@ public class PlayerMovement : MonoBehaviour
     public float speed = 5f;
     public float jumpForce = 10f;
     
+    [Header("Effects")]
+    [Tooltip("Efek asap/partikel saat double jump")]
+    public GameObject doubleJumpEffect;
+
     [Header("Ground Snapping (untuk slope)")]
     [Tooltip("Aktifkan agar player menempel di slope")]
     public bool enableGroundSnapping = true;
@@ -24,6 +28,7 @@ public class PlayerMovement : MonoBehaviour
     private Animator animator;
     private Collider2D playerCollider;
     private bool isGrounded = false;
+    private bool canDoubleJump = false; // Status apakah sedang bisa double jump
     private float moveX;
 
     void Start()
@@ -79,11 +84,11 @@ public class PlayerMovement : MonoBehaviour
         // Flip sprite
         if (moveX > 0)
         {
-            spriteRenderer.flipX = true;
+            spriteRenderer.flipX = false;
         }
         else if (moveX < 0)
         {
-            spriteRenderer.flipX = false;
+            spriteRenderer.flipX = true;
         }
 
         // Animator
@@ -92,15 +97,40 @@ public class PlayerMovement : MonoBehaviour
             bool isMoving = Mathf.Abs(moveX) > 0;
             animator.SetBool("IsIdle", !isMoving && isGrounded);
             animator.SetBool("IsRunning", isMoving && isGrounded);
-            animator.SetBool("IsJump", !isGrounded);
+            
+            // Pisahkan loncat (naik) dan jatuh (turun)
+            bool isJumping = !isGrounded && rb.velocity.y > 0.1f;
+            bool isFalling = !isGrounded && rb.velocity.y < -0.1f;
+            
+            animator.SetBool("IsJump", isJumping);
+            animator.SetBool("IsFall", isFalling);
         }
 
         // Jump
         bool jumpPressed = Input.GetKeyDown(KeyCode.Space) || JumpButton.IsPressed;
-        if (jumpPressed && isGrounded)
+        if (jumpPressed)
         {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-            isGrounded = false;
+            if (isGrounded)
+            {
+                // Loncat pertama dari tanah
+                rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+                isGrounded = false;
+                canDoubleJump = true; // Izinkan double jump setelah lompatan pertama
+            }
+            else if (canDoubleJump)
+            {
+                // Double jump selama di udara (hanya jika sudah lompat dari tanah, bukan saat fall/jatuh biasa)
+                rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+                canDoubleJump = false; // Matikan double jump agar tidak bisa lompat berkali-kali
+                
+                // Munculkan efek asap saat double jump
+                if (doubleJumpEffect != null)
+                {
+                    // Posisi efek sedikit di bawah player (di area kaki)
+                    Vector3 effectPosition = transform.position + new Vector3(0, -0.5f, 0);
+                    Instantiate(doubleJumpEffect, effectPosition, Quaternion.identity);
+                }
+            }
         }
     }
 
