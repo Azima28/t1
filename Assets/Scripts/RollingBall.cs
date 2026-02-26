@@ -27,6 +27,9 @@ public class RollingBall : MonoBehaviour
     public float rotationSpeed = 360f;
 
     [Header("Ground Snapping")]
+    [Tooltip("Centang jika ingin bola bisa menggelinding DI DALAM tanah (tidak nempel ke atas)")]
+    public bool allowInsideGround = false;
+    
     [Tooltip("Layer tanah/slope agar bola menempel")]
     public LayerMask groundLayer;
     
