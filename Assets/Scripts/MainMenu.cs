@@ -7,7 +7,16 @@ public class MainMenu : MonoBehaviour
 {
     public void PlayGame()
     {
-        SceneManager.LoadScene("Level");
+        // Panggil transisi layar hitam sebelum pindah scene
+        if (SceneTransition.instance != null)
+        {
+            SceneTransition.instance.LoadScene("Level");
+        }
+        else
+        {
+            // Fallback kalau lupa pasang script transisi di scene
+            SceneManager.LoadScene("Level");
+        }
     }
 
     public void QuitGame()

@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ninja Gyroscope</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+            touch-action: none;
+        }
+
+        /* ===== BACKGROUND ===== */
+        .scene {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #0a0e1a 0%, #121832 30%, #1a1f3d 60%, #2a1a3d 100%);
+            overflow: hidden;
+        }
+
+        /* Stars */
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease-out;
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle var(--duration) ease-in-out infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% {
+                opacity: 0.2;
+                transform: scale(0.8);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        /* Moon */
+        .moon {
+            position: absolute;
+            top: 8%;
+            right: 12%;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #ffeebb, #ffdd88 50%, #eebb55);
+            box-shadow: 0 0 40px 15px rgba(255, 221, 100, 0.15), 0 0 80px 30px rgba(255, 200, 50, 0.08);
+            transition: transform 0.3s ease-out;
+        }
+
+        .moon::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.05));
+        }
+
+        /* Mountains */
+        .mountains {
+            position: absolute;
+            bottom: 0;
+            width: 120%;
+            left: -10%;
+            height: 35%;
+            transition: transform 0.3s ease-out;
+        }
+
+        .mountain {
+            position: absolute;
+            bottom: 0;
+        }
+
+        .mountain-1 {
+            left: -5%;
+            width: 0;
+            height: 0;
+            border-left: 250px solid transparent;
+            border-right: 300px solid transparent;
+            border-bottom: 280px solid #151a30;
+        }
+
+        .mountain-2 {
+            left: 20%;
+            width: 0;
+            height: 0;
+            border-left: 350px solid transparent;
+            border-right: 280px solid transparent;
+            border-bottom: 350px solid #121630;
+        }
+
+        .mountain-3 {
+            right: -5%;
+            width: 0;
+            height: 0;
+            border-left: 300px solid transparent;
+            border-right: 250px solid transparent;
+            border-bottom: 300px solid #161b33;
+        }
+
+        /* Ground */
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 120%;
+            left: -10%;
+            height: 12%;
+            background: linear-gradient(180deg, #1a1f3a, #0f1225);
+            transition: transform 0.3s ease-out;
+        }
+
+        .ground::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(100, 130, 255, 0.15), rgba(150, 100, 255, 0.2), rgba(100, 130, 255, 0.15), transparent);
+        }
+
+        /* ===== NINJA CHARACTER (SPRITE) ===== */
+        .ninja-container {
+            position: absolute;
+            bottom: 12%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            transition: left 0.05s linear;
+        }
+
+        .ninja-sprite {
+            width: 120px;
+            height: 120px;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+            transition: transform 0.1s ease;
+        }
+
+        .ninja-sprite.flip {
+            transform: scaleX(-1);
+        }
+
+        /* Ninja shadow */
+        .ninja-shadow {
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 12px;
+            background: radial-gradient(ellipse, rgba(0, 0, 0, 0.5) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: shadow-pulse 0.8s ease-in-out infinite alternate;
+        }
+
+        @keyframes shadow-pulse {
+            0% {
+                transform: translateX(-50%) scale(1);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: translateX(-50%) scale(0.85);
+                opacity: 0.3;
+            }
+        }
+
+        /* ===== TRAIL PARTICLES ===== */
+        .trail-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: trail-fade 0.6s ease-out forwards;
+        }
+
+        .trail-purple {
+            background: rgba(139, 92, 246, 0.6);
+            box-shadow: 0 0 6px rgba(139, 92, 246, 0.3);
+        }
+
+        .trail-gold {
+            background: rgba(255, 200, 50, 0.5);
+            box-shadow: 0 0 6px rgba(255, 200, 50, 0.3);
+        }
+
+        @keyframes trail-fade {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(0) translateY(-15px);
+            }
+        }
+
+        /* ===== UI OVERLAY ===== */
+        .ui-overlay {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(139, 92, 246, 0.5), 0 2px 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-badge.active {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.4);
+            color: rgba(34, 197, 94, 0.9);
+        }
+
+        .dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #888;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .status-badge.active .dot {
+            background: #22c55e;
+            box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* Tilt indicator */
+        .tilt-indicator {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .tilt-axis {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+        }
+
+        .tilt-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #8b5cf6;
+            text-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Permission button for iOS */
+        .permission-btn {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 200;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+            display: none;
+        }
+
+        .permission-btn:hover {
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+        }
+
+        /* Floating particles */
+        .floating-particle {
+            position: absolute;
+            background: rgba(139, 92, 246, 0.15);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float-up var(--float-duration) linear infinite;
+        }
+
+        @keyframes float-up {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100vh) translateX(var(--float-x));
+                opacity: 0;
+            }
+        }
+
+        /* Instruction text */
+        .instruction {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            z-index: 100;
+            white-space: nowrap;
+            animation: fade-in-out 3s ease-in-out infinite;
+        }
+
+        @keyframes fade-in-out {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        /* Preload images hidden */
+        .preload {
+            position: absolute;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="scene" id="scene">
+        <!-- Stars layer -->
+        <div class="stars" id="stars"></div>
+
+        <!-- Moon -->
+        <div class="moon" id="moon"></div>
+
+        <!-- Floating particles -->
+        <div id="floating-particles"></div>
+
+        <!-- Mountains -->
+        <div class="mountains" id="mountains">
+            <div class="mountain mountain-1"></div>
+            <div class="mountain mountain-2"></div>
+            <div class="mountain mountain-3"></div>
+        </div>
+
+        <!-- Ground -->
+        <div class="ground" id="ground"></div>
+
+        <!-- Ninja -->
+        <div class="ninja-container" id="ninja-container">
+            <img class="ninja-sprite" id="ninja-sprite" src="sprites/Idle/Idle__000.png" alt="Ninja">
+            <div class="ninja-shadow"></div>
+        </div>
+
+        <!-- Trail container -->
+        <div id="trail-container"></div>
+    </div>
+
+    <!-- UI Overlay -->
+    <div class="ui-overlay">
+        <div class="title">🥷 Ninja Gyro</div>
+        <div class="status-badge" id="status-badge">
+            <span class="dot"></span>
+            <span id="status-text">Detecting sensor...</span>
+        </div>
+    </div>
+
+    <!-- Tilt indicator -->
+    <div class="tilt-indicator">
+        <div class="tilt-axis">
+            <div>X</div>
+            <div class="tilt-value" id="tilt-x">0°</div>
+        </div>
+        <div class="tilt-axis">
+            <div>Y</div>
+            <div class="tilt-value" id="tilt-y">0°</div>
+        </div>
+    </div>
+
+    <!-- Instruction -->
+    <div class="instruction" id="instruction">Miringkan device untuk menggerakkan ninja</div>
+
+    <!-- iOS permission button -->
+    <button class="permission-btn" id="permission-btn" onclick="requestPermission()">
+        🥷 Aktifkan Gyroscope
+    </button>
+
+    <!-- Preload all sprite images -->
+    <div class="preload" id="preload"></div>
+
+    <script>
+        // ===== SPRITE CONFIG =====
+        const IDLE_FRAMES = 10;  // Idle__000.png to Idle__009.png
+        const RUN_FRAMES = 10;   // Run__000.png to Run__009.png
+        const IDLE_FPS = 8;      // frames per second for idle
+        const RUN_FPS = 12;      // frames per second for run
+
+        // Preload all images
+        const idleImages = [];
+        const runImages = [];
+
+        function preloadImages() {
+            const preloadDiv = document.getElementById('preload');
+            for (let i = 0; i < IDLE_FRAMES; i++) {
+                const img = new Image();
+                const num = String(i).padStart(3, '0');
+                img.src = `sprites/Idle/Idle__${num}.png`;
+                idleImages.push(img);
+                preloadDiv.appendChild(img);
+            }
+            for (let i = 0; i < RUN_FRAMES; i++) {
+                const img = new Image();
+                const num = String(i).padStart(3, '0');
+                img.src = `sprites/Run/Run__${num}.png`;
+                runImages.push(img);
+                preloadDiv.appendChild(img);
+            }
+        }
+
+        // ===== STATE =====
+        const state = {
+            ninjaX: window.innerWidth / 2,
+            ninjaY: 0,
+            tiltX: 0,
+            tiltY: 0,
+            isMoving: false,
+            useGyro: false,
+            useMouse: false,
+            speed: 5,
+            lastTrailTime: 0,
+            // Sprite animation
+            currentAnim: 'idle',  // 'idle' or 'run'
+            frameIndex: 0,
+            lastFrameTime: 0,
+            facingRight: true,
+        };
+
+        // ===== DOM ELEMENTS =====
+        const ninjaContainer = document.getElementById('ninja-container');
+        const ninjaSprite = document.getElementById('ninja-sprite');
+        const stars = document.getElementById('stars');
+        const moon = document.getElementById('moon');
+        const mountains = document.getElementById('mountains');
+        const ground = document.getElementById('ground');
+        const statusBadge = document.getElementById('status-badge');
+        const statusText = document.getElementById('status-text');
+        const tiltXDisplay = document.getElementById('tilt-x');
+        const tiltYDisplay = document.getElementById('tilt-y');
+        const instruction = document.getElementById('instruction');
+        const permissionBtn = document.getElementById('permission-btn');
+        const trailContainer = document.getElementById('trail-container');
+
+        // ===== GENERATE STARS =====
+        function generateStars() {
+            const count = 120;
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 3 + 1;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 65 + '%';
+                star.style.setProperty('--duration', (Math.random() * 3 + 1.5) + 's');
+                star.style.animationDelay = Math.random() * 3 + 's';
+                stars.appendChild(star);
+            }
+        }
+
+        // ===== FLOATING PARTICLES =====
+        function generateFloatingParticles() {
+            const container = document.getElementById('floating-particles');
+            for (let i = 0; i < 15; i++) {
+                const p = document.createElement('div');
+                p.className = 'floating-particle';
+                const size = Math.random() * 6 + 2;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.bottom = '-20px';
+                p.style.setProperty('--float-duration', (Math.random() * 10 + 8) + 's');
+                p.style.setProperty('--float-x', (Math.random() * 60 - 30) + 'px');
+                p.style.animationDelay = Math.random() * 10 + 's';
+                container.appendChild(p);
+            }
+        }
+
+        // ===== SPRITE ANIMATION =====
+        function updateSpriteAnimation(timestamp) {
+            const anim = state.isMoving ? 'run' : 'idle';
+            const fps = state.isMoving ? RUN_FPS : IDLE_FPS;
+            const frames = state.isMoving ? runImages : idleImages;
+            const frameInterval = 1000 / fps;
+
+            // Reset frame if animation changed
+            if (anim !== state.currentAnim) {
+                state.currentAnim = anim;
+                state.frameIndex = 0;
+                state.lastFrameTime = timestamp;
+            }
+
+            // Advance frame
+            if (timestamp - state.lastFrameTime >= frameInterval) {
+                state.frameIndex = (state.frameIndex + 1) % frames.length;
+                state.lastFrameTime = timestamp;
+            }
+
+            // Update sprite image
+            if (frames[state.frameIndex]) {
+                ninjaSprite.src = frames[state.frameIndex].src;
+            }
+
+            // Flip direction
+            if (state.facingRight) {
+                ninjaSprite.classList.remove('flip');
+            } else {
+                ninjaSprite.classList.add('flip');
+            }
+        }
+
+        // ===== TRAIL EFFECT =====
+        function spawnTrail(x, bottomPercent) {
+            const now = Date.now();
+            if (now - state.lastTrailTime < 60) return;
+            state.lastTrailTime = now;
+
+            for (let i = 0; i < 2; i++) {
+                const particle = document.createElement('div');
+                const type = Math.random() > 0.5 ? 'trail-purple' : 'trail-gold';
+                particle.className = `trail-particle ${type}`;
+                particle.style.left = (x + (Math.random() * 30 - 15)) + 'px';
+                particle.style.bottom = (window.innerHeight * bottomPercent / 100 + Math.random() * 20) + 'px';
+                const size = Math.random() * 5 + 3;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                trailContainer.appendChild(particle);
+                setTimeout(() => particle.remove(), 600);
+            }
+        }
+
+        // ===== DEVICE ORIENTATION =====
+        function handleOrientation(e) {
+            let gamma = e.gamma || 0;
+            let beta = e.beta || 0;
+            gamma = Math.max(-45, Math.min(45, gamma));
+            beta = Math.max(-45, Math.min(45, beta));
+            state.tiltX = gamma;
+            state.tiltY = beta;
+        }
+
+        // ===== iOS PERMISSION =====
+        async function requestPermission() {
+            if (typeof DeviceOrientationEvent !== 'undefined' &&
+                typeof DeviceOrientationEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceOrientationEvent.requestPermission();
+                    if (permission === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation);
+                        state.useGyro = true;
+                        permissionBtn.style.display = 'none';
+                        updateStatus(true, 'Gyroscope Aktif');
+                    }
+                } catch (err) {
+                    console.error('Permission denied:', err);
+                    setupMouseFallback();
+                }
+            }
+        }
+
+        // ===== MOUSE FALLBACK =====
+        function setupMouseFallback() {
+            state.useMouse = true;
+            updateStatus(true, 'Mouse Mode');
+            instruction.textContent = 'Gerakkan mouse untuk menggerakkan ninja';
+
+            document.addEventListener('mousemove', (e) => {
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+                state.tiltX = ((e.clientX - centerX) / centerX) * 30;
+                state.tiltY = ((e.clientY - centerY) / centerY) * 20;
+            });
+
+            document.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+                state.tiltX = ((touch.clientX - centerX) / centerX) * 30;
+                state.tiltY = ((touch.clientY - centerY) / centerY) * 20;
+            }, { passive: false });
+        }
+
+        // ===== STATUS UPDATE =====
+        function updateStatus(active, text) {
+            if (active) {
+                statusBadge.classList.add('active');
+            } else {
+                statusBadge.classList.remove('active');
+            }
+            statusText.textContent = text;
+        }
+
+        // ===== INIT SENSOR =====
+        function initSensors() {
+            if (typeof DeviceOrientationEvent !== 'undefined') {
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    permissionBtn.style.display = 'block';
+                } else {
+                    let hasGyro = false;
+                    const testHandler = (e) => {
+                        if (e.gamma !== null || e.beta !== null) {
+                            hasGyro = true;
+                            state.useGyro = true;
+                            updateStatus(true, 'Gyroscope Aktif');
+                            window.addEventListener('deviceorientation', handleOrientation);
+                        }
+                        window.removeEventListener('deviceorientation', testHandler);
+                        if (!hasGyro) setupMouseFallback();
+                    };
+                    window.addEventListener('deviceorientation', testHandler);
+                    setTimeout(() => {
+                        if (!state.useGyro && !state.useMouse) {
+                            window.removeEventListener('deviceorientation', testHandler);
+                            setupMouseFallback();
+                        }
+                    }, 1500);
+                }
+            } else {
+                setupMouseFallback();
+            }
+        }
+
+        // ===== MAIN ANIMATION LOOP =====
+        function update(timestamp) {
+            const deadzone = 3;
+            const absX = Math.abs(state.tiltX);
+            const absY = Math.abs(state.tiltY);
+            const isMoving = absX > deadzone || absY > deadzone;
+
+            state.isMoving = isMoving;
+
+            // Update facing direction
+            if (absX > deadzone) {
+                state.facingRight = state.tiltX > 0;
+            }
+
+            // Move ninja
+            if (isMoving) {
+                const moveX = (state.tiltX / 45) * state.speed;
+                state.ninjaX += moveX;
+
+                const margin = 40;
+                state.ninjaX = Math.max(margin, Math.min(window.innerWidth - margin, state.ninjaX));
+
+                // Trail
+                spawnTrail(state.ninjaX, 12);
+            }
+
+            // Apply position
+            ninjaContainer.style.left = state.ninjaX + 'px';
+
+            // Parallax
+            const parallaxX = state.tiltX * 0.5;
+            const parallaxY = state.tiltY * 0.3;
+            stars.style.transform = `translate(${-parallaxX * 0.3}px, ${-parallaxY * 0.3}px)`;
+            moon.style.transform = `translate(${-parallaxX * 0.6}px, ${-parallaxY * 0.4}px)`;
+            mountains.style.transform = `translate(${-parallaxX * 0.8}px, ${-parallaxY * 0.2}px)`;
+            ground.style.transform = `translate(${-parallaxX * 1.0}px, 0)`;
+
+            // Tilt display
+            tiltXDisplay.textContent = Math.round(state.tiltX) + '°';
+            tiltYDisplay.textContent = Math.round(state.tiltY) + '°';
+
+            // Sprite animation
+            updateSpriteAnimation(timestamp);
+
+            requestAnimationFrame(update);
+        }
+
+        // ===== HANDLE RESIZE =====
+        window.addEventListener('resize', () => {
+            state.ninjaX = Math.min(state.ninjaX, window.innerWidth - 40);
+        });
+
+        // ===== INIT =====
+        preloadImages();
+        generateStars();
+        generateFloatingParticles();
+        initSensors();
+        requestAnimationFrame(update);
+    </script>
+</body>
+
+</html>
