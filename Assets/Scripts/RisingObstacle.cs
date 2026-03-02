@@ -31,6 +31,9 @@ public class RisingObstacle : MonoBehaviour
     [Tooltip("Centang agar obstacle DIAM SELAMANYA di tujuan (tidak pernah kembali)")]
     public bool stayForever = false;
     
+    [Tooltip("Tinggi khusus saat stay forever, biarkan 0 jika ingin sesuai dengan rise height")]
+    public float stayForeverHeight = 0f;
+    
     [Tooltip("Delay sebelum turun (hanya berlaku jika stayForever = false)")]
     public float stayDuration = 0f;
     
@@ -50,6 +53,7 @@ public class RisingObstacle : MonoBehaviour
     
     private Vector3 startPosition;
     private Vector3 targetPosition;
+    private Vector3 stayForeverPosition;
     private SpriteRenderer sprite;
     private Collider2D col;
     private Rigidbody2D rb;
@@ -65,6 +69,7 @@ public class RisingObstacle : MonoBehaviour
         
         startPosition = transform.position;
         targetPosition = startPosition + new Vector3(0, riseHeight, 0);
+        stayForeverPosition = startPosition + new Vector3(0, stayForeverHeight != 0f ? stayForeverHeight : riseHeight, 0);
         
         // Setup Rigidbody
         if (rb != null)
@@ -142,6 +147,7 @@ public class RisingObstacle : MonoBehaviour
     {
         if (!movingUp) return;
         
+        // Pindah ke target tertinggi HINGGA selesai
         transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
         
         if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
@@ -154,10 +160,23 @@ public class RisingObstacle : MonoBehaviour
                 rb.velocity = Vector2.zero;
             }
             
-            // Jika tidak disuruh diam selamanya, baru mulai turun
-            if (!stayForever && stayDuration >= 0)
+            // Logika penurunan
+            if (stayForever)
             {
-                Invoke(nameof(StartLowering), stayDuration);
+                // Jika stay forever, apakah ada tinggi khusus? (Asumsi tidak 0)
+                if (stayForeverHeight > 0.01f && stayForeverHeight != riseHeight)
+                {
+                    Invoke(nameof(StartLoweringToStayForeverHeight), stayDuration);
+                }
+                // Jika tidak ada tinggi khusus atau tingginya sama, tidak ngapa-ngapain. (Stay di target)
+            }
+            else
+            {
+                // Kalau tidak stay forever, maka turun ke start secara normal
+                if (stayDuration >= 0)
+                {
+                    Invoke(nameof(StartLowering), stayDuration);
+                }
             }
         }
     }
@@ -167,27 +186,35 @@ public class RisingObstacle : MonoBehaviour
         isWaiting = false;
     }
 
-    void StartLowering()
+    void StartLoweringToStayForeverHeight()
     {
-        StartCoroutine(LowerDown());
+        StartCoroutine(LowerDownTo(stayForeverPosition, true));
     }
 
-    System.Collections.IEnumerator LowerDown()
+    void StartLowering()
     {
-        while (Vector3.Distance(transform.position, startPosition) > 0.01f)
+        StartCoroutine(LowerDownTo(startPosition, false));
+    }
+
+    System.Collections.IEnumerator LowerDownTo(Vector3 destination, bool keepActive)
+    {
+        while (Vector3.Distance(transform.position, destination) > 0.01f)
         {
-            transform.position = Vector3.MoveTowards(transform.position, startPosition, speed * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position, destination, speed * Time.deltaTime);
             yield return null;
         }
         
-        transform.position = startPosition;
+        transform.position = destination;
         
-        if (!loopMode)
+        if (!keepActive)
         {
-            isActive = false;
-            if (sprite != null && hideBeforeTrigger && requireTrigger)
+            if (!loopMode)
             {
-                sprite.enabled = false;
+                isActive = false;
+                if (sprite != null && hideBeforeTrigger && requireTrigger)
+                {
+                    sprite.enabled = false;
+                }
             }
         }
     }
